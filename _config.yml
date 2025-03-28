@@ -7,3 +7,5 @@ url: "https://kanavrajfarishta.github.io"
 markdown: kramdown
 theme: minima
 permalink: /:title/
+
+excerpt_separator: "<!--more-->"
