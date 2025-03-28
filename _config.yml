@@ -1,0 +1,9 @@
+title: "My Thoughts, Ideas and Experiments Lead Space"
+description: "My Thoughts, Ideas and Experiments"
+baseurl: ""  # No subfolder
+url: "https://kanavrajfarishta.github.io"
+
+# Build settings
+markdown: kramdown
+theme: minima
+permalink: /:title/
