@@ -319,3 +319,6 @@ footer {
   }
   
 
+  nav ul li {
+    background: red; /* test only */
+  }
