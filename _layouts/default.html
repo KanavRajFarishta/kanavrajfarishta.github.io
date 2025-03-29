@@ -1,43 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>{{ page.title }} - {{ site.title }}</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
-
 <body>
-  <!-- Navigation -->
   <header>
     <nav>
       <ul>
-        <li><a href="{{ site.baseurl }}/">Home</a></li>
-        <li><a href="{{ site.baseurl }}/about.html">About</a></li>
-        <li><a href="{{ site.baseurl }}/blog/">Blog</a></li>
-        <li><a href="{{ site.baseurl }}/about.html">About</a></li>
-        <!-- <li><a href="{{ site.baseurl }}/resume.pdf" download>Resume</a></li> -->
+        <li><a href="/">Home</a></li>
+        <li><a href="/about.html">About</a></li>
+        <li><a href="/blog/">Blog</a></li>
       </ul>
     </nav>
   </header>
 
-  <!-- Hero / Cover Photo if added -->
-  {% if page.image %}
-  <section class="cover-photo">
-    <img src="{{ page.image }}" alt="{{ page.title }}">
-  </section>
-  {% endif %}
-
-  <!-- Main Content -->
   <main class="content">
     {{ content }}
   </main>
 
-  <!-- Footer -->
   <footer>
-    <p>&copy; 2025 Kanav | All Rights Reserved</p>
+    <p>&copy; 2025 Kanav. All Rights Reserved.</p>
   </footer>
 </body>
-
 </html>
