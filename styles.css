@@ -10,28 +10,29 @@ body {
     transition: background 0.3s ease;
 }
 
-/* Navigation */
 nav {
     background-color: #0d1117;
-    padding: 25px 50px;
+    padding: 20px 50px;
     border-bottom: 1px solid #21262d;
     position: fixed;
     width: 100%;
     z-index: 1000;
-    display: flex; /* NEW */
-    justify-content: flex-end; /* NEW */
+    display: flex;
+    align-items: center; /* NEW */
+    justify-content: center; /* CHANGE THIS */
 }
 
 nav ul {
     list-style: none;
     display: flex;
-    gap: 40px; /* NEW: Proper spacing between links */
+    gap: 30px; /* Smaller gap, not 40px */
     padding: 0;
     margin: 0;
+    flex-wrap: wrap; /* ALLOW WRAPPING if needed */
 }
 
 nav li {
-    margin: 0; /* REMOVE margin-left here, use gap instead */
+    margin: 0;
 }
 
 nav a {
@@ -40,6 +41,7 @@ nav a {
     font-weight: 500;
     position: relative;
     transition: color 0.3s;
+    font-size: 1rem; /* SMALLER FONT to avoid overflow */
 }
 
 nav a::after {
@@ -60,6 +62,7 @@ nav a:hover::after {
 nav a:hover {
     color: #00ffe7;
 }
+
 
 /* Hero Section */
 .intro {
