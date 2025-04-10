@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Real-Time ProxySQL Monitoring with FastAPI, Prometheus, and Grafana</title>
+  <link rel="stylesheet" href="../../styles.css" />
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+</head>
+
+<body>
+  <header>
+    <nav>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/about/">About</a></li>
+        <li><a href="/blog/">Blog</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="content">
+    <h1>Real-Time ProxySQL Monitoring with FastAPI, Prometheus, and Grafana</h1>
+    <p><em>Posted on April 10, 2025</em></p>
+
+    <p>ProxySQL is one of the most popular high-performance proxies for MySQL and MariaDB. It brings important features like query routing, connection pooling, and load balancing — all critical for scaling database infrastructures.</p>
+
+    <p>However, while ProxySQL is excellent at managing traffic between applications and databases, it doesn’t naturally provide rich observability into its own health or performance. In production systems, this lack of visibility can cause problems to go unnoticed until they impact end users.</p>
+
+    <p>To address this, we set up a real-time monitoring solution for ProxySQL using FastAPI, Prometheus, and Grafana. This post outlines why monitoring ProxySQL is critical, and how integrating these tools gives you complete observability over your database proxy layer.</p>
+
+    <h2>Why ProxySQL Monitoring Matters</h2>
+
+    <p>ProxySQL performs several key functions in a production environment:</p>
+    <ul>
+      <li>Load balancing across database replicas</li>
+      <li>Query routing based on complex rule sets</li>
+      <li>Connection pooling, reducing load on database backends</li>
+    </ul>
+
+    <p>However, without proper monitoring, it’s difficult to know when:</p>
+    <ul>
+      <li>A backend database goes offline</li>
+      <li>Query latency increases</li>
+      <li>Connection pools are exhausted</li>
+      <li>Traffic patterns shift unexpectedly</li>
+    </ul>
+
+    <p>Monitoring isn’t optional — it’s essential for proactive operations.</p>
+
+    <h2>Observability Components</h2>
+
+    <p>To create an effective monitoring pipeline, we integrated four components:</p>
+    <ol>
+      <li>FastAPI Exporter — connects to ProxySQL and exposes metrics</li>
+      <li>Prometheus — collects and stores metrics</li>
+      <li>Grafana — visualizes metrics with dashboards</li>
+      <li>Slack Alerts (optional) — real-time notifications on threshold breaches</li>
+    </ol>
+
+    <h2>Challenges with ProxySQL Monitoring</h2>
+
+    <p>ProxySQL doesn’t natively expose Prometheus metrics. It maintains internal statistics, but they are accessible only through SQL queries on its admin interface — meaning there’s no direct <code>/metrics</code> endpoint like other systems offer.</p>
+
+    <p><strong>Exporters</strong> solve this gap by:</p>
+    <ul>
+      <li>Querying ProxySQL’s internal stats</li>
+      <li>Translating them into Prometheus-compatible metrics</li>
+      <li>Exposing them over HTTP for Prometheus scraping</li>
+    </ul>
+
+    <h2>Why Build Our Own Exporter?</h2>
+
+    <p>While ProxySQL exporters exist, we built a lightweight FastAPI-based exporter for flexibility and simplicity during prototyping.</p>
+
+    <p>FastAPI offers quick development, is lightweight for low-to-medium production loads, and is easy to maintain. For higher-scale environments, a Go-based exporter would be a natural next step to improve concurrency and efficiency due to Go’s minimal resource footprint.</p>
+
+    <h2>System Architecture</h2>
+
+    <pre>
+Application ➔ ProxySQL ➔ MySQL
+                ↓
+        FastAPI Exporter
+                ↓
+            Prometheus
+                ↓
+              Grafana
+    </pre>
+
+    <h2>Building the Monitoring Pipeline</h2>
+
+    <h3>Step 1: Deploy ProxySQL and MySQL</h3>
+
+    <p>We deployed ProxySQL and MySQL using Docker Compose, mapping ports:</p>
+    <ul>
+      <li>6032 → Admin interface (pull metrics)</li>
+      <li>6033 → Application traffic (handle queries)</li>
+    </ul>
+
+    <h3>Step 2: FastAPI Exporter</h3>
+
+    <p>The exporter connects to ProxySQL’s admin interface and runs queries like:</p>
+    <pre>
+SELECT digest_text, sum(count_star) FROM stats_mysql_query_digest;
+SELECT SUM(ConnUsed) FROM stats_mysql_connection_pool;
+SELECT COUNT(*) FROM mysql_servers WHERE status = 'ONLINE';
+    </pre>
+
+    <p>It exposes metrics like query digest stats, connection pool usage, and server health at the <code>/metrics</code> endpoint for Prometheus scraping.</p>
+
+    <h3>Step 3: Prometheus Scraping</h3>
+
+    <p>Prometheus scrapes the exporter every 5 seconds using the following configuration:</p>
+    <pre>
+scrape_configs:
+  - job_name: 'proxysql-exporter'
+    static_configs:
+      - targets: ['proxysql-exporter:9104']
+    </pre>
+
+    <h3>Step 4: Grafana Dashboards</h3>
+
+    <p>Grafana connects to Prometheus as a data source to build visual dashboards showing:</p>
+    <ul>
+      <li>Top Queries by count</li>
+      <li>Slowest Queries by latency</li>
+      <li>Connection Pool Health</li>
+      <li>Backend Servers Online</li>
+    </ul>
+
+    <p>These dashboards provide a real-time view into ProxySQL’s behavior, allowing for quick diagnosis of issues.</p>
+
+    <h2>Slack Alerts (Optional)</h2>
+
+    <p>Slack integration can easily complement this setup by sending real-time alerts when thresholds are breached.</p>
+
+    <p>A simple setup using:</p>
+    <ul>
+      <li>Slack Incoming Webhooks</li>
+      <li>Grafana Alert Rules</li>
+      <li>Contact Points configuration</li>
+    </ul>
+
+    <p>would allow operators to receive notifications when backend servers go offline, connection errors occur, or query latencies spike.</p>
+
+    <p>While Slack integration is straightforward, it was outside the immediate scope of this project, as internal dashboards provided sufficient observability for the current requirements.</p>
+
+    <h2>Conclusion</h2>
+
+    <p>By integrating FastAPI, Prometheus, and Grafana, we significantly improved observability for ProxySQL in our environment.</p>
+
+    <ul>
+      <li>Early warnings before failures</li>
+      <li>Real-time metrics and historical trends</li>
+      <li>Scalable monitoring foundation</li>
+    </ul>
+
+    <p>Monitoring isn't an afterthought — it’s the foundation of resilient systems.</p>
+
+    <h2>Full Code</h2>
+
+    <p>https://github.com/KanavRajFarishta/proxySQL-monitoring</p>
+
+    <p>The entire setup is containerized, documented, and ready for deployment.</p>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Kanav Raj | All Rights Reserved</p>
+  </footer>
+
+</body>
+</html>
