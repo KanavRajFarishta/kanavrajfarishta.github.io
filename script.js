@@ -1,10 +1,14 @@
 document.addEventListener("DOMContentLoaded", () => {
+    const container = document.getElementById("blog-container");
+    if (!container) {
+      console.error("blog-container not found");
+      return;
+    }
+  
     fetch("/blog/blog-data.json")
       .then(res => res.json())
       .then(posts => {
         posts.sort((a, b) => new Date(b.date) - new Date(a.date));
-  
-        const container = document.getElementById("blog-container");
         posts.forEach(post => {
           container.innerHTML += `
             <div class="blog-card">
@@ -15,6 +19,8 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
           `;
         });
-      });
+      })
+      .catch(err => console.error(err));
   });
+  
   
