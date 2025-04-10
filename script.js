@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-    fetch("blog-data.json")
+    fetch("/blog/blog-data.json")
       .then(res => res.json())
       .then(posts => {
         posts.sort((a, b) => new Date(b.date) - new Date(a.date));
