@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("blog-container");
     if (!container) {
-      console.error("blog-container not found");
+      //console.error("blog-container not found");
       return;
     }
   
