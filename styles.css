@@ -12,15 +12,17 @@ body {
 
 nav {
     background-color: #0d1117;
-    padding: 20px 50px;
+    padding: 15px 50px;
     border-bottom: 1px solid #21262d;
     position: fixed;
+    top: 0; /* NEW - ensure top aligned */
+    left: 0; /* NEW */
     width: 100%;
     z-index: 1000;
     display: flex;
-    align-items: center; /* NEW */
-    justify-content: center; /* CHANGE THIS */
-}
+    align-items: center;
+    justify-content: center;
+  }
 
 nav ul {
     list-style: none;
@@ -289,6 +291,7 @@ footer {
     max-width: 800px;
     margin: 120px auto;
     font-size: 1.2rem;
+    padding: 120px 20px 50px;
     line-height: 1.8;
     color: #c9d1d9;
     padding: 0 20px;
