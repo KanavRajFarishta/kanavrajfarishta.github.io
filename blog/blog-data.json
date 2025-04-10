@@ -3,7 +3,7 @@
       "title": "Real-Time ProxySQL Monitoring with FastAPI, Prometheus, and Grafana",
       "date": "2025-04-10",
       "snippet": "ProxySQL is one of the most popular high-performance proxies for MySQL and MariaDB. It brings...",
-      "link": "posts/proxysql-monitoring/index.html"
+      "link": "posts/proxysql-monitoring/"
     }
   ]
   
