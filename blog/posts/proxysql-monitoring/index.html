@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Real-Time ProxySQL Monitoring with FastAPI, Prometheus, and Grafana</title>
-  <link rel="stylesheet" href="../../styles.css" />
+  <link rel="stylesheet" href="/styles.css" />
   <link rel="icon" href="/favicon.ico" type="image/x-icon" />
 </head>
 
@@ -74,18 +74,7 @@
     <p>While ProxySQL exporters exist, we built a lightweight FastAPI-based exporter for flexibility and simplicity during prototyping.</p>
 
     <p>FastAPI offers quick development, is lightweight for low-to-medium production loads, and is easy to maintain. For higher-scale environments, a Go-based exporter would be a natural next step to improve concurrency and efficiency due to Go’s minimal resource footprint.</p>
-
-    <h2>System Architecture</h2>
-
-    <pre>
-Application ➔ ProxySQL ➔ MySQL
-                ↓
-        FastAPI Exporter
-                ↓
-            Prometheus
-                ↓
-              Grafana
-    </pre>
+    <p>However, for our current needs, FastAPI suffices. It’s easy to set up and provides a clear path to extend functionality as needed.</p>
 
     <h2>Building the Monitoring Pipeline</h2>
 
@@ -129,6 +118,17 @@ scrape_configs:
     </ul>
 
     <p>These dashboards provide a real-time view into ProxySQL’s behavior, allowing for quick diagnosis of issues.</p>
+
+    <h2>🚀 Grafana Overview Dashboard</h2>
+<p>Here’s a snapshot of the main Grafana dashboard we built to monitor ProxySQL performance metrics in real-time:</p>
+
+<img src="/resources/grafana1.png" alt="Grafana Overview Dashboard" style="max-width: 100%; border-radius: 10px; margin: 20px 0;" />
+
+<h2>🚀 Connection Pool Health</h2>
+<p>Monitoring connection pools ensures we know exactly when pools are saturated or backend servers start dropping off:</p>
+
+<img src="images/grafana1.png" alt="Grafana Overview Dashboard" style="max-width: 100%; border-radius: 10px; margin: 20px 0;" />
+
 
     <h2>Slack Alerts (Optional)</h2>
 
