@@ -1,5 +1,11 @@
 [
     {
+      "title": "Java Concurrency: Threads, Lifecycle, and the Efficiency Trap",
+      "date": "2026-04-20",
+      "snippet": "If you want to understand Java concurrency, stop thinking about code and start thinking about logistics. Before tackling the 1 Billion Row Challenge, we need to understand what threads actually are, how they work, and why \"just add more threads\" is almost always the wrong answer.",
+      "link": "posts/java-concurrency-threads/"
+    },
+    {
       "title": "Real-Time ProxySQL Monitoring with FastAPI, Prometheus, and Grafana",
       "date": "2025-04-10",
       "snippet": "ProxySQL is one of the most popular high-performance proxies for MySQL and MariaDB. It brings...",

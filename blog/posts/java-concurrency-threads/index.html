@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Java Concurrency: Threads, Lifecycle, and the Efficiency Trap</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="icon" href="/resources/favicon.ico" type="image/x-icon" />
+</head>
+
+<body>
+  <header>
+    <nav>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/about/">About</a></li>
+        <li><a href="/blog/">Blog</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="content">
+    <h1>Java Concurrency: Threads, Lifecycle, and the Efficiency Trap</h1>
+    <p><em>Posted on April 20, 2026</em></p>
+
+    <p>If you want to understand Java concurrency, stop thinking about code and start thinking about logistics.</p>
+
+    <p>The 1 Billion Row Challenge, where the fastest Java programs processed a billion rows of data in under two seconds. Every winning solution squeezed every last drop of parallelism out of the hardware. But before we can get there, we need to understand what threads actually are, how they work, and why "just add more threads" is almost always the wrong answer.</p>
+
+    <p>Let's build that foundation.</p>
+
+    <h2>1. The Process vs. The Thread</h2>
+
+    <p><strong>The Process is the Factory Building.</strong> When you hit "run" on your Java app, the operating system hands you an entire factory. This factory comes with its own electricity, plumbing, and security — its own memory space, file handles, and environment variables. It's completely isolated. One factory can't just reach over and borrow a wrench from the factory next door. That isolation is by design. It's what keeps a crashing browser tab from taking down your entire OS.</p>
+
+    <p><strong>The Thread is the Worker.</strong> The thread is the person on the assembly line, the one actually doing the work. Your factory starts with a single worker: the main thread. If the work piles up, you hire more workers (create more threads).</p>
+
+    <p>Here's the catch that makes concurrency hard: all workers in the same factory share the same breakroom, tools, and supplies. In Java terms, they share the <strong>Heap</strong> — the region of memory where objects live. This sharing is great for communication (no need to pass messages between buildings), but it's a nightmare when two workers try to grab the same hammer at the same time.</p>
+
+    <p>That collision — two threads modifying the same data simultaneously — is called a <strong>race condition</strong>, and it's the root cause of some of the most painful bugs you'll ever encounter.</p>
+
+    <h2>2. The Lifecycle: From "Hired" to "Retired"</h2>
+
+    <p>A thread doesn't just "exist." It moves through a specific lifecycle managed by the JVM's Thread Scheduler. Think of it as a worker's shift:</p>
+
+    <ul>
+      <li><strong>NEW</strong> — The worker has been hired (<code>new Thread()</code>), but hasn't clocked in yet. They're standing outside the factory, contract signed, ready to go. No work is happening yet.</li>
+
+      <li><strong>RUNNABLE</strong> — They've clocked in and they're on the floor. This is the tricky one. "Runnable" doesn't mean "currently running." It means "ready and willing." The worker might be actively turning a wrench right now, or they might be standing by, waiting for a turn on the machine (CPU time). The OS decides who gets the machine. You don't.</li>
+
+      <li><strong>BLOCKED</strong> — The worker walks up to a tool cabinet that's locked because someone else is using it. They have no choice but to stand there and wait. In Java, this happens when a thread tries to enter a <code>synchronized</code> block that another thread already holds.</li>
+
+      <li><strong>WAITING</strong> — The worker deliberately pauses. They've called <code>wait()</code> or <code>join()</code> because they need a specific signal from a teammate before they can continue. They won't move until they get it.</li>
+
+      <li><strong>TIMED_WAITING</strong> — They're on a scheduled break. "I'll be back in 30 minutes." In code, this is <code>Thread.sleep(30000)</code> or <code>wait(30000)</code>. The thread parks itself for a fixed duration and comes back automatically.</li>
+
+      <li><strong>TERMINATED</strong> — The shift is over. The <code>run()</code> method has completed (or thrown an unhandled exception). This worker has left the building, and they're not coming back. You can't restart a terminated thread — you have to create a new one.</li>
+    </ul>
+
+    <h2>3. Hiring Your Workers: Two Approaches</h2>
+
+    <p>Java gives you two ways to create threads. One is the professional way. The other still works, but you'll rarely see it in production code.</p>
+
+    <h3>The Runnable Interface (The Right Way)</h3>
+
+    <p>This is like hiring a contractor. You define the job description separately, then hand that job to a thread.</p>
+
+    <pre>
+// Define the task
+class DataChunkProcessor implements Runnable {
+    @Override
+    public void run() {
+        System.out.println("Processing chunk on thread: " + Thread.currentThread().getName());
+    }
+}
+
+// Execute the task
+public class Main {
+    public static void main(String[] args) {
+        Runnable task = new DataChunkProcessor();
+        Thread worker = new Thread(task, "Worker-1");
+        worker.start(); // Always call start(), NEVER call run() directly!
+    }
+}</pre>
+
+    <p>Why does this win? <strong>Separation of concerns.</strong></p>
+
+    <p>The <em>what</em> (the task — <code>DataChunkProcessor</code> in the example above) is decoupled from the <em>who</em> (the thread). This matters because Java doesn't support multiple inheritance. If your class extends <code>Thread</code>, it can never extend anything else. With <code>Runnable</code>, your task class stays free to inherit from <code>BaseService</code>, <code>ByteProcessor</code>, or whatever it needs to.</p>
+
+    <p>It also means the same task definition can be handed to a <code>Thread</code>, submitted to an <code>ExecutorService</code>, or wrapped in a <code>CompletableFuture</code>. Flexibility you'll appreciate the moment your codebase grows beyond a toy example.</p>
+
+    <p><em>Do not worry about the above jargon — we will cover them in a future post.</em></p>
+
+    <h3>Extending Thread (The Old School Way)</h3>
+
+    <p>This is like creating a specialized robot that <em>is</em> the worker. Its identity and its job are fused together.</p>
+
+    <pre>
+class FastParser extends Thread {
+    @Override
+    public void run() {
+        System.out.println("Parsing data on thread: " + Thread.currentThread().getName());
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        FastParser parser = new FastParser();
+        parser.start();
+    }
+}</pre>
+
+    <p>The problem: it's rigid. Your class is a <code>Thread</code> now. That's its entire identity. It can't be a <code>Service</code>, a <code>Handler</code>, or anything else that would require extending a different class. In practice, you'll almost always use <code>Runnable</code> (or better yet, <code>Callable</code> when you need a return value).</p>
+
+    <h3>One Crucial Mistake to Avoid</h3>
+
+    <p>Never call <code>run()</code> directly on a thread.</p>
+
+    <pre>
+Thread worker = new Thread(task);
+worker.run();   // WRONG — runs on YOUR thread, not a new one
+worker.start(); // RIGHT — creates a new thread and runs the task there</pre>
+
+    <p>Calling <code>run()</code> is just a regular method call. It executes on the current thread.</p>
+    <p>Calling <code>start()</code> is what actually tells the JVM to create a new OS thread and schedule it.</p>
+
+    <h2>4. The Efficiency Trap: Is More Always Better?</h2>
+
+    <p>You might be thinking: "If threads let me do work in parallel, then more threads = more speed, right?"</p>
+
+    <p><strong>Absolutely not.</strong></p>
+
+    <p>Imagine a factory with 2 assembly lines (CPU cores). Now you hire 100 workers (threads). You don't get 50x the output. Here's what actually happens:</p>
+
+    <p><strong>Context Switching</strong> — The OS can only run as many threads simultaneously as you have CPU cores. With 100 threads on 2 cores, the OS constantly swaps workers in and out of the two available seats. Every swap — called a context switch — requires saving one thread's entire state (registers, program counter, stack pointer) and loading another's. Each context switch costs somewhere between 1 and 10 microseconds. Individually, that's tiny. But multiply it by thousands of switches per second across hundreds of threads, and those microseconds start eating into your actual work time. In high-concurrency scenarios, the combined overhead can reduce effective CPU throughput by 10–40% or more.</p>
+
+    <p><strong>Memory Overhead</strong> — Every thread isn't free. By default, each thread gets around 1 MB of stack space on most modern operating systems. Spin up 1,000 threads and you've just consumed a gigabyte of memory in stack allocations alone, before you've even started doing useful work. That's memory your application heap can't use.</p>
+
+    <p><strong>Lock Contention</strong> — If 10 workers are fighting over 1 screwdriver, work grinds to a halt. In Java, this is <code>synchronized</code> block contention. Excessive context switching often comes from contention on shared resources, particularly synchronized locks. Threads pile up, the OS keeps swapping them in hoping they'll make progress, and they immediately block again. It's the worst kind of busy-doing-nothing.</p>
+
+    <p><strong>The Golden Rule:</strong> You want just enough workers to keep your machines (CPU cores) at full capacity. For CPU-bound work, that's typically close to the number of available cores. For I/O-bound work (waiting on networks, databases, files), you can go higher because threads spend most of their time parked, not competing for CPU. But there's always a ceiling, and hitting it means you're just paying for the overhead of seat-swapping.</p>
+
+    <p>This is exactly why the 1 Billion Row Challenge winners didn't just spawn a thousand threads and hope for the best. The challenge was run on eight cores of a dedicated server. The top solutions carefully partitioned the file into chunks, assigned one thread per core, and made sure those threads almost never had to wait on each other. Every microsecond of contention or context switching was a microsecond wasted.</p>
+
+    <h2>5. Why This Matters for the 1BRC Journey</h2>
+
+    <p>Everything in this post — the shared heap, the lifecycle states, the cost of context switching, the contention problem — is going to come back when we start building our 1 Billion Row Challenge solution. We'll need to:</p>
+
+    <ul>
+      <li>Split a 13 GB file across threads without them stepping on each other</li>
+      <li>Aggregate results without locking on every single write</li>
+      <li>Keep context switches to a minimum so CPU time goes toward parsing, not scheduling</li>
+    </ul>
+
+    <p>That's where the real fun starts.</p>
+
+    <h2>What's Next? The JMM Horror Story</h2>
+
+    <p>Now that we have our workers on the floor, how do we stop them from overwriting each other's work? We'll dive into the <strong>Java Memory Model (JMM)</strong> — the set of rules that governs what one thread can "see" of another thread's writes. Spoiler: without the right guarantees, Thread A can write a value and Thread B might never see it. Not because of a bug. Because that's how modern CPUs and compilers actually work.</p>
+
+    <p>"Sharing is caring" is actually a recipe for disaster in multithreading. Let's find out why.</p>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Kanav | All Rights Reserved</p>
+  </footer>
+
+</body>
+</html>
